@@ -1,12 +1,5 @@
 pub(crate) fn extract_digits(s: &str) -> (&str, &str) {
-    let digits_end = s
-        .char_indices()
-        .find_map(|(idx, ch)| if ch.is_ascii_digit() { None } else { Some(idx) })
-        .unwrap_or_else(|| s.len());
-
-    let digits = &s[..digits_end];
-    let remainder = &s[digits_end..];
-    (remainder, digits)
+    take_while(|c| c.is_ascii_digit(), s)
 }
 
 pub(crate) fn extract_op(s: &str) -> (&str, &str) {
@@ -15,6 +8,20 @@ pub(crate) fn extract_op(s: &str) -> (&str, &str) {
         _ => panic!("Unsupported operator"),
     }
     (&s[1..], &s[0..1])
+}
+
+pub(crate) fn extract_whitespace(s: &str) -> (&str, &str) {
+    take_while(|c| c == ' ', s)
+}
+
+fn take_while(accept: impl Fn(char) -> bool, s: &str) -> (&str, &str) {
+    let end = s
+        .char_indices()
+        .find_map(|(idx, ch)| if accept(ch) { None } else { Some(idx) })
+        .unwrap_or_else(|| s.len());
+    let accepted = &s[..end];
+    let remainder = &s[end..];
+    (remainder, accepted)
 }
 
 #[cfg(test)]
@@ -59,5 +66,10 @@ mod tests {
     #[test]
     fn extract_slash() {
         assert_eq!(extract_op("/4"), ("4", "/"));
+    }
+
+    #[test]
+    fn extract_spaces() {
+        assert_eq!(extract_whitespace("    1"), ("1", "    "));
     }
 }
